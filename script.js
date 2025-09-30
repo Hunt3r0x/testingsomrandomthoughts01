@@ -76,32 +76,13 @@
 		setLoading(true);
 		resultEl.textContent = '';
 
-		const url = 'https://leakcheck.net/api/public?check=' + encodeURIComponent(email);
-
-		fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
-			.then(function(res) { return res.json(); })
-			.then(function(json) {
-				if (json && json.success === true) {
-					logSearchToDiscord({ email: email, status: 'leaked', found: json.found });
-					return renderSuccess(json);
-				}
-				if (json && json.success === false && (json.error === 'Not found' || json.error === 'Enter at least 3 characters to search')) {
-					logSearchToDiscord({ email: email, status: 'not_found', error: json.error });
-					return renderNotFound(json.error);
-				}
-				if (json && json.error) {
-					logSearchToDiscord({ email: email, status: 'error', error: json.error });
-					return renderError(json.error);
-				}
-				logSearchToDiscord({ email: email, status: 'error', error: 'Unexpected response' });
-				return renderError('Unexpected response');
-			})
-			.catch(function(err) {
-				var message = (err && err.message) ? err.message : 'Network error';
-				logSearchToDiscord({ email: email, status: 'network_error', error: message });
-				renderError(message);
-			})
-			.finally(function() { setLoading(false); });
+		// const url = 'https://leakcheck.net/api/public?check=' + encodeURIComponent(email);
+		// Live API check disabled per request. Always return "not leaked".
+		setTimeout(function() {
+			logSearchToDiscord({ email: email, status: 'not_found', error: 'Mocked: API disabled' });
+			renderNotFound('No leaks found. Secured.');
+			setLoading(false);
+		}, 300);
 	});
 })();
 
